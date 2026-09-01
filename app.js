@@ -10,6 +10,35 @@ const DEFAULT_NEWS=[
 ];
 function getNews(){return JSON.parse(localStorage.getItem("fan_news")||"null")||DEFAULT_NEWS}
 function saveNews(n){localStorage.setItem("fan_news",JSON.stringify(n))}
+async function loadSiteContent() {
+  const { data, error } = await supabaseClient
+    .from("site_content")
+    .select("*")
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("خطا در دریافت اطلاعات سایت:", error);
+    return;
+  }
+
+  if (!data) return;
+
+  const title = document.querySelector(".about h2");
+  const text = document.querySelector(".about p");
+  const address = document.querySelector(".card p");
+  const phone = document.querySelector(".card p[dir='ltr']");
+
+  if (title) title.textContent = data.main_title || "";
+  if (text) text.textContent = data.main_text || "";
+  if (address) address.textContent = data.address || "";
+  if (phone) phone.textContent = data.phone || "";
+
+  document.querySelectorAll("footer p").forEach((p, i) => {
+    if (i === 0) p.textContent = data.address || "";
+    if (i === 1) p.textContent = data.phone || "";
+  });
+}
 function renderNews(id,limit){let el=document.getElementById(id);if(!el)return;let n=getNews().slice(0,limit||99);el.innerHTML=n.map(x=>`<article class="news"><div class="date">${x.date||""}</div><h3>${esc(x.title)}</h3><p>${esc(x.body)}</p></article>`).join("")}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function toggleMenu(){document.getElementById("nav")?.classList.toggle("open")}
@@ -44,4 +73,4 @@ function logout(){sessionStorage.removeItem("fan_admin");location.reload()}
 function renderAdmin(){let e=document.getElementById("adminNews");if(!e)return;e.innerHTML=getNews().map((x,i)=>`<div class="admin-item"><b>${esc(x.title)}</b><p>${esc(x.body)}</p><button onclick="delNews(${i})">حذف</button></div>`).join("")}
 function delNews(i){let n=getNews();n.splice(i,1);saveNews(n);renderAdmin()}
 function changePass(){let p=document.getElementById("newpass").value;if(p.length<4)return alert("رمز باید حداقل ۴ کاراکتر باشد.");localStorage.setItem("fan_pass",p);alert("رمز ذخیره شد.")}
-document.addEventListener("DOMContentLoaded",()=>{renderNews("newsList",3);renderNews("allNews");initSlider();if(location.pathname.endsWith("admin.html"))showDash();document.getElementById("form")?.addEventListener("submit",e=>{e.preventDefault();let n=getNews();n.unshift({title:title.value,body:body.value,date:new Date().toLocaleDateString("fa-IR")});saveNews(n);e.target.reset();renderAdmin()})})
+document.addEventListener("DOMContentLoaded",()=>{renderNews("newsList",3);loadSiteContent();renderNews("allNews");initSlider();if(location.pathname.endsWith("admin.html"))showDash();document.getElementById("form")?.addEventListener("submit",e=>{e.preventDefault();let n=getNews();n.unshift({title:title.value,body:body.value,date:new Date().toLocaleDateString("fa-IR")});saveNews(n);e.target.reset();renderAdmin()})})
