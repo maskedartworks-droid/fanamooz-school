@@ -1,5 +1,9 @@
 const SUPABASE_URL = "https://whjeurwstvryrrpgwigz.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TqfUbviGYULqP3pdl1ug2Q_NXruETS0";
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 const DEFAULT_NEWS=[
  {title:"آغاز به کار وب‌سایت هنرستان فن آموز",body:"به وب‌سایت رسمی هنرستان فن آموز خوش آمدید. اخبار و اطلاعیه‌های جدید از این بخش منتشر می‌شود.",date:"۱۴۰۵/۰۶/۰۱"},
  {title:"اطلاعیه هنرستان",body:"اطلاعیه‌های مهم آموزشی و برنامه‌های هنرستان در این قسمت قرار می‌گیرد.",date:"۱۴۰۵/۰۶/۰۱"}
