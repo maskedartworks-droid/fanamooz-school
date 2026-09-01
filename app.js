@@ -12,11 +12,12 @@ function toggleMenu(){document.getElementById("nav")?.classList.toggle("open")}
 let si=0;function initSlider(){let s=[...document.querySelectorAll(".slide")],d=document.getElementById("dots");if(!s.length)return;d.innerHTML=s.map((_,i)=>`<span class="dot ${i==0?"on":""}"></span>`).join("");setInterval(()=>move(1),5000)}
 function move(x){let s=[...document.querySelectorAll(".slide")];if(!s.length)return;s[si].classList.remove("active");si=(si+x+s.length)%s.length;s[si].classList.add("active");document.querySelectorAll(".dot").forEach((d,i)=>d.classList.toggle("on",i==si))}
 async function login() {
-  const email = prompt("ایمیل مدیر Supabase را وارد کنید:");
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("pass").value;
 
   if (!email || !password) {
-    document.getElementById("err").textContent = "ایمیل و رمز را وارد کنید.";
+    document.getElementById("err").textContent =
+      "ایمیل و رمز عبور را وارد کنید.";
     return;
   }
 
