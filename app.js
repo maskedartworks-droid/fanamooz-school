@@ -1,13 +1,31 @@
 const SUPABASE_URL = "https://whjeurwstvryrrpgwigz.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TqfUbviGYULqP3pdl1ug2Q_NXruETS0";
+
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
-const DEFAULT_NEWS=[
- {title:"آغاز به کار وب‌سایت هنرستان فن آموز",body:"به وب‌سایت رسمی هنرستان فن آموز خوش آمدید. اخبار و اطلاعیه‌های جدید از این بخش منتشر می‌شود.",date:"۱۴۰۵/۰۶/۰۱"},
- {title:"اطلاعیه هنرستان",body:"اطلاعیه‌های مهم آموزشی و برنامه‌های هنرستان در این قسمت قرار می‌گیرد.",date:"۱۴۰۵/۰۶/۰۱"}
-];
+
+
+// =========================
+// ابزارها
+// =========================
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[m]));
+}
+
+
+// =========================
+// اخبار
+// =========================
+
 async function getNews() {
   const { data, error } = await supabaseClient
     .from("news")
@@ -15,12 +33,76 @@ async function getNews() {
     .order("id", { ascending: false });
 
   if (error) {
-    console.error(error);
+    console.error("خطا در دریافت اخبار:", error);
     return [];
   }
 
   return data || [];
 }
+
+
+async function renderNews(id, limit) {
+  const el = document.getElementById(id);
+
+  if (!el) return;
+
+  let news = await getNews();
+
+  news = news.slice(0, limit || 99);
+
+  el.innerHTML = news.map(x => `
+    <article class="news">
+      <div class="date">${esc(x.date)}</div>
+      <h3>${esc(x.title)}</h3>
+      <p>${esc(x.body)}</p>
+    </article>
+  `).join("");
+}
+
+
+async function renderAdmin() {
+  const el = document.getElementById("adminNews");
+
+  if (!el) return;
+
+  const news = await getNews();
+
+  el.innerHTML = news.map(x => `
+    <div class="admin-item">
+      <b>${esc(x.title)}</b>
+      <p>${esc(x.body)}</p>
+      <button onclick="delNews('${x.id}')">حذف</button>
+    </div>
+  `).join("");
+}
+
+
+async function delNews(id) {
+  if (!confirm("این خبر حذف شود؟")) return;
+
+  const { error } = await supabaseClient
+    .from("news")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    alert("حذف خبر انجام نشد.");
+    return;
+  }
+
+  await renderAdmin();
+  await renderNews("newsList", 3);
+  await renderNews("allNews");
+
+  alert("خبر حذف شد.");
+}
+
+
+// =========================
+// اطلاعات سایت
+// =========================
+
 async function loadSiteContent() {
   const { data, error } = await supabaseClient
     .from("site_content")
@@ -50,106 +132,403 @@ async function loadSiteContent() {
     if (i === 1) p.textContent = data.phone || "";
   });
 }
-async function renderNews(id,limit){
-  let el=document.getElementById(id);
-  if(!el)return;
 
-  let n = await getNews();
-  n = n.slice(0,limit||99);
 
-  el.innerHTML=n.map(x=>`
-    <article class="news">
-      <div class="date">${x.date||""}</div>
-      <h3>${esc(x.title)}</h3>
-      <p>${esc(x.body)}</p>
-    </article>
-  `).join("");
+async function saveSite() {
+  const mainTitle =
+    document.getElementById("mainTitle")?.value.trim() || "";
+
+  const mainText =
+    document.getElementById("mainText")?.value.trim() || "";
+
+  const address =
+    document.getElementById("address")?.value.trim() || "";
+
+  const phone =
+    document.getElementById("phone")?.value.trim() || "";
+
+
+  const { data: existing, error: readError } = await supabaseClient
+    .from("site_content")
+    .select("id")
+    .limit(1)
+    .maybeSingle();
+
+
+  if (readError) {
+    console.error(readError);
+    alert("دریافت اطلاعات سایت انجام نشد.");
+    return;
+  }
+
+
+  let result;
+
+
+  if (existing?.id) {
+
+    result = await supabaseClient
+      .from("site_content")
+      .update({
+        main_title: mainTitle,
+        main_text: mainText,
+        address: address,
+        phone: phone
+      })
+      .eq("id", existing.id);
+
+  } else {
+
+    result = await supabaseClient
+      .from("site_content")
+      .insert({
+        main_title: mainTitle,
+        main_text: mainText,
+        address: address,
+        phone: phone
+      });
+  }
+
+
+  if (result.error) {
+    console.error(result.error);
+    alert("ذخیره اطلاعات سایت انجام نشد.");
+    return;
+  }
+
+
+  await loadSiteContent();
+
+  alert("اطلاعات سایت ذخیره شد.");
 }
-function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function toggleMenu(){document.getElementById("nav")?.classList.toggle("open")}
-let si=0;function initSlider(){let s=[...document.querySelectorAll(".slide")],d=document.getElementById("dots");if(!s.length)return;d.innerHTML=s.map((_,i)=>`<span class="dot ${i==0?"on":""}"></span>`).join("");setInterval(()=>move(1),5000)}
-function move(x){let s=[...document.querySelectorAll(".slide")];if(!s.length)return;s[si].classList.remove("active");si=(si+x+s.length)%s.length;s[si].classList.add("active");document.querySelectorAll(".dot").forEach((d,i)=>d.classList.toggle("on",i==si))}
+
+
+// =========================
+// ورود مدیر
+// =========================
+
 async function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("pass").value;
+
+  const email =
+    document.getElementById("email")?.value.trim();
+
+  const password =
+    document.getElementById("pass")?.value;
+
+  const err =
+    document.getElementById("err");
+
 
   if (!email || !password) {
-    document.getElementById("err").textContent =
-      "ایمیل و رمز عبور را وارد کنید.";
+    if (err) {
+      err.textContent =
+        "ایمیل و رمز عبور را وارد کنید.";
+    }
+
     return;
   }
 
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
+
+  const { error } =
+    await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
 
   if (error) {
-    document.getElementById("err").textContent =
-      "ایمیل یا رمز عبور اشتباه است.";
+    console.error(error);
+
+    if (err) {
+      err.textContent =
+        "ایمیل یا رمز عبور اشتباه است.";
+    }
+
     return;
   }
 
+
   sessionStorage.fan_admin = "1";
-  async function showDash() {
-  if (sessionStorage.fan_admin !== "1") return;
 
-  document.getElementById("login")?.classList.add("hidden");
-  document.getElementById("dash")?.classList.remove("hidden");
+  showDash();
+}
 
-  const s = getSite();
 
-  const mainTitle = document.getElementById("mainTitle");
-  const mainText = document.getElementById("mainText");
-  const address = document.getElementById("address");
-  const phone = document.getElementById("phone");
+// =========================
+// پنل مدیریت
+// =========================
 
-  if (mainTitle) mainTitle.value = s.mainTitle;
-  if (mainText) mainText.value = s.mainText;
-  if (address) address.value = s.address;
-  if (phone) phone.value = s.phone;
+async function showDash() {
+
+  if (sessionStorage.fan_admin !== "1") {
+    return;
+  }
+
+
+  document
+    .getElementById("login")
+    ?.classList.add("hidden");
+
+
+  document
+    .getElementById("dash")
+    ?.classList.remove("hidden");
+
+
+  const { data, error } =
+    await supabaseClient
+      .from("site_content")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+
+
+  if (!error && data) {
+
+    const mainTitle =
+      document.getElementById("mainTitle");
+
+    const mainText =
+      document.getElementById("mainText");
+
+    const address =
+      document.getElementById("address");
+
+    const phone =
+      document.getElementById("phone");
+
+
+    if (mainTitle)
+      mainTitle.value = data.main_title || "";
+
+    if (mainText)
+      mainText.value = data.main_text || "";
+
+    if (address)
+      address.value = data.address || "";
+
+    if (phone)
+      phone.value = data.phone || "";
+  }
+
 
   await renderAdmin();
 }
-function delNews(i){let n=getNews();n.splice(i,1);saveNews(n);renderAdmin()}
-function changePass(){let p=document.getElementById("newpass").value;if(p.length<4)return alert("رمز باید حداقل ۴ کاراکتر باشد.");localStorage.setItem("fan_pass",p);alert("رمز ذخیره شد.")}
-document.addEventListener("DOMContentLoaded", async () => {
-  await renderNews("newsList", 3);
-  await loadSiteContent();
-  await renderNews("allNews");
 
-  initSlider();
 
-  if (location.pathname.toLowerCase().endsWith("admin.html")) {
-    showDash();
+async function logout() {
+
+  await supabaseClient.auth.signOut();
+
+  sessionStorage.removeItem("fan_admin");
+
+  location.reload();
+}
+
+
+// =========================
+// تغییر رمز
+// =========================
+
+async function changePass() {
+
+  const input =
+    document.getElementById("newpass");
+
+  if (!input) return;
+
+
+  const password = input.value;
+
+
+  if (password.length < 6) {
+    alert("رمز باید حداقل ۶ کاراکتر باشد.");
+    return;
   }
 
-  document.getElementById("form")?.addEventListener("submit", async e => {
-    e.preventDefault();
 
-    const titleInput = document.getElementById("title");
-    const bodyInput = document.getElementById("body");
+  const { error } =
+    await supabaseClient.auth.updateUser({
+      password: password
+    });
 
-    const { error } = await supabaseClient
-      .from("news")
-      .insert({
-        title: titleInput.value.trim(),
-        body: bodyInput.value.trim(),
-        date: new Date().toLocaleDateString("fa-IR")
-      });
 
-    if (error) {
-      console.error(error);
-      alert("ذخیره خبر انجام نشد.");
-      return;
-    }
+  if (error) {
+    console.error(error);
+    alert("تغییر رمز انجام نشد.");
+    return;
+  }
 
-    e.target.reset();
 
-    await renderAdmin();
+  input.value = "";
+
+  alert("رمز مدیریت تغییر کرد.");
+}
+
+
+// =========================
+// اسلایدر
+// =========================
+
+let si = 0;
+
+
+function initSlider() {
+
+  const slides =
+    [...document.querySelectorAll(".slide")];
+
+  const dots =
+    document.getElementById("dots");
+
+
+  if (!slides.length) return;
+
+
+  if (dots) {
+
+    dots.innerHTML = slides.map((_, i) =>
+      `<span class="dot ${i === 0 ? "on" : ""}"></span>`
+    ).join("");
+  }
+
+
+  setInterval(() => {
+    move(1);
+  }, 5000);
+}
+
+
+function move(x) {
+
+  const slides =
+    [...document.querySelectorAll(".slide")];
+
+  if (!slides.length) return;
+
+
+  slides[si].classList.remove("active");
+
+
+  si =
+    (si + x + slides.length) %
+    slides.length;
+
+
+  slides[si].classList.add("active");
+
+
+  document
+    .querySelectorAll(".dot")
+    .forEach((dot, i) => {
+      dot.classList.toggle("on", i === si);
+    });
+}
+
+
+function toggleMenu() {
+
+  document
+    .getElementById("nav")
+    ?.classList.toggle("open");
+}
+
+
+// =========================
+// شروع سایت
+// =========================
+
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
+
     await renderNews("newsList", 3);
+
+    await loadSiteContent();
+
     await renderNews("allNews");
 
-    alert("خبر با موفقیت ذخیره شد.");
-  });
-});
+    initSlider();
+
+
+    if (
+      location.pathname
+        .toLowerCase()
+        .endsWith("admin.html")
+    ) {
+
+      if (sessionStorage.fan_admin === "1") {
+        await showDash();
+      }
+    }
+
+
+    // افزودن خبر
+
+    document
+      .getElementById("form")
+      ?.addEventListener(
+        "submit",
+        async e => {
+
+          e.preventDefault();
+
+
+          const titleInput =
+            document.getElementById("title");
+
+          const bodyInput =
+            document.getElementById("body");
+
+
+          const title =
+            titleInput?.value.trim();
+
+          const body =
+            bodyInput?.value.trim();
+
+
+          if (!title || !body) {
+            alert("عنوان و متن خبر را وارد کنید.");
+            return;
+          }
+
+
+          const { error } =
+            await supabaseClient
+              .from("news")
+              .insert({
+                title: title,
+                body: body,
+                date: new Date()
+                  .toLocaleDateString("fa-IR")
+              });
+
+
+          if (error) {
+
+            console.error(error);
+
+            alert(
+              "خبر ذخیره نشد. Console را بررسی کنید."
+            );
+
+            return;
+          }
+
+
+          e.target.reset();
+
+
+          await renderAdmin();
+
+          await renderNews("newsList", 3);
+
+          await renderNews("allNews");
+
+
+          alert("خبر با موفقیت ذخیره شد.");
+        }
+      );
+  }
+);
