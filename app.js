@@ -1,15 +1,8 @@
-javascript
-const SUPABASE_URL =
-  "https://whjeurwstvryrrpgwigz.supabase.co";
 
-const SUPABASE_KEY =
-  "sb_publishable_TqfUbviGYULqP3pdl1ug2Q_NXruETS0";
+const SUPABASE_URL ="https://whjeurwstvryrrpgwigz.supabase.co";
+const SUPABASE_KEY ="sb_publishable_TqfUbviGYULqP3pdl1ug2Q_NXruETS0";
 
-const supabaseClient =
-  supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+const supabaseClient =supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 
 // ==================================================
