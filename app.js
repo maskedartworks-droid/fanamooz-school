@@ -1,8 +1,11 @@
 
-const SUPABASE_URL ="https://whjeurwstvryrrpgwigz.supabase.co";
-const SUPABASE_KEY ="sb_publishable_TqfUbviGYULqP3pdl1ug2Q_NXruETS0";
+const SUPABASE_URL = "https://whjeurwstvryrrpgwigz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_TqfUbviGYULqP3pdl1ug2Q_NXruETS0";
 
-const supabaseClient =supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 
 // ==================================================
@@ -10,22 +13,15 @@ const supabaseClient =supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 // ==================================================
 
 function esc(value) {
-
-  return String(value ?? "").replace(
-    /[&<>"']/g,
-    function (m) {
-
-      return {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[m];
-
-    }
-  );
-
+  return String(value ?? "").replace(/[&<>"']/g, function (m) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[m];
+  });
 }
 
 
@@ -34,183 +30,85 @@ function esc(value) {
 // ==================================================
 
 async function getNews() {
+  const { data, error } = await supabaseClient
+    .from("news")
+    .select("*")
+    .order("id", { ascending: false });
 
-  const result =
-    await supabaseClient
-      .from("news")
-      .select("*")
-      .order("id", {
-        ascending: false
-      });
-
-  if (result.error) {
-
-    console.error(
-      "خطا در دریافت اخبار:",
-      result.error
-    );
-
+  if (error) {
+    console.error("خطا در دریافت اخبار:", error);
     return [];
-
   }
 
-  return result.data || [];
-
+  return data || [];
 }
 
 
-async function renderNews(
-  elementId,
-  limit
-) {
-
-  const el =
-    document.getElementById(elementId);
+async function renderNews(id, limit) {
+  const el = document.getElementById(id);
 
   if (!el) return;
 
-
-  let news =
-    await getNews();
-
+  let news = await getNews();
 
   if (limit) {
-
-    news =
-      news.slice(0, limit);
-
+    news = news.slice(0, limit);
   }
 
-
-  el.innerHTML =
-    news.map(function (item) {
-
-      return `
-        <article class="news">
-
-          <div class="date">
-            ${esc(item.date)}
-          </div>
-
-          <h3>
-            ${esc(item.title)}
-          </h3>
-
-          <p>
-            ${esc(item.body)}
-          </p>
-
-        </article>
-      `;
-
-    }).join("");
-
+  el.innerHTML = news.map(function (x) {
+    return `
+      <article class="news">
+        <div class="date">${esc(x.date)}</div>
+        <h3>${esc(x.title)}</h3>
+        <p>${esc(x.body)}</p>
+      </article>
+    `;
+  }).join("");
 }
 
 
-// ==================================================
-// اخبار پنل
-// ==================================================
-
 async function renderAdmin() {
-
-  const el =
-    document.getElementById(
-      "adminNews"
-    );
+  const el = document.getElementById("adminNews");
 
   if (!el) return;
 
+  const news = await getNews();
 
-  const news =
-    await getNews();
-
-
-  el.innerHTML =
-    news.map(function (item) {
-
-      return `
-        <div class="admin-item">
-
-          <b>
-            ${esc(item.title)}
-          </b>
-
-          <p>
-            ${esc(item.body)}
-          </p>
-
-          <button
-            type="button"
-            onclick="delNews('${esc(item.id)}')"
-          >
-            حذف
-          </button>
-
-        </div>
-      `;
-
-    }).join("");
-
+  el.innerHTML = news.map(function (x) {
+    return `
+      <div class="admin-item">
+        <b>${esc(x.title)}</b>
+        <p>${esc(x.body)}</p>
+        <button type="button" onclick="delNews('${x.id}')">
+          حذف
+        </button>
+      </div>
+    `;
+  }).join("");
 }
 
 
-// ==================================================
-// حذف خبر
-// ==================================================
-
 async function delNews(id) {
-
-  if (
-    !confirm(
-      "این خبر حذف شود؟"
-    )
-  ) {
-
+  if (!confirm("این خبر حذف شود؟")) {
     return;
-
   }
 
+  const { error } = await supabaseClient
+    .from("news")
+    .delete()
+    .eq("id", id);
 
-  const result =
-    await supabaseClient
-      .from("news")
-      .delete()
-      .eq("id", id);
-
-
-  if (result.error) {
-
-    console.error(
-      "خطا در حذف خبر:",
-      result.error
-    );
-
-    alert(
-      "حذف خبر انجام نشد."
-    );
-
+  if (error) {
+    console.error("خطا در حذف خبر:", error);
+    alert("حذف خبر انجام نشد.");
     return;
-
   }
-
 
   await renderAdmin();
+  await renderNews("newsList", 3);
+  await renderNews("allNews");
 
-  await renderNews(
-    "newsList",
-    3
-  );
-
-  await renderNews(
-    "allNews"
-  );
-
-
-  alert(
-    "خبر با موفقیت حذف شد."
-  );
-
+  alert("خبر حذف شد.");
 }
 
 
@@ -219,434 +117,222 @@ async function delNews(id) {
 // ==================================================
 
 async function loadSiteContent() {
+  const { data, error } = await supabaseClient
+    .from("site_content")
+    .select("*")
+    .limit(1)
+    .maybeSingle();
 
-  const result =
-    await supabaseClient
-      .from("site_content")
-      .select("*")
-      .limit(1)
-      .maybeSingle();
-
-
-  if (result.error) {
-
-    console.error(
-      "خطا در اطلاعات سایت:",
-      result.error
-    );
-
+  if (error) {
+    console.error("خطا در دریافت اطلاعات سایت:", error);
     return;
-
   }
-
-
-  const data =
-    result.data;
-
 
   if (!data) return;
 
-
-  const title =
-    document.querySelector(
-      ".about h2"
-    );
-
-  const text =
-    document.querySelector(
-      ".about > div:first-child p"
-    );
-
-  const address =
-    document.querySelector(
-      ".card p"
-    );
-
-  const phone =
-    document.querySelector(
-      ".card p[dir='ltr']"
-    );
-
+  const title = document.querySelector(".about h2");
+  const text = document.querySelector(".about > div:first-child p");
+  const address = document.querySelector(".card p");
+  const phone = document.querySelector(".card p[dir='ltr']");
 
   if (title) {
-
-    title.textContent =
-      data.main_title || "";
-
+    title.textContent = data.main_title || "";
   }
-
 
   if (text) {
-
-    text.textContent =
-      data.main_text || "";
-
+    text.textContent = data.main_text || "";
   }
-
 
   if (address) {
-
-    address.textContent =
-      data.address || "";
-
+    address.textContent = data.address || "";
   }
-
 
   if (phone) {
-
-    phone.textContent =
-      data.phone || "";
-
+    phone.textContent = data.phone || "";
   }
 
+  document.querySelectorAll("footer p").forEach(function (p, i) {
+    if (i === 0) {
+      p.textContent = data.address || "";
+    }
 
-  document
-    .querySelectorAll(
-      "footer p"
-    )
-    .forEach(function (p, i) {
-
-      if (i === 0) {
-
-        p.textContent =
-          data.address || "";
-
-      }
-
-      if (i === 1) {
-
-        p.textContent =
-          data.phone || "";
-
-      }
-
-    });
-
+    if (i === 1) {
+      p.textContent = data.phone || "";
+    }
+  });
 }
 
 
-// ==================================================
-// ذخیره اطلاعات سایت
-// ==================================================
-
 async function saveSite() {
-
   const mainTitle =
-    document
-      .getElementById("mainTitle")
-      ?.value
-      .trim() || "";
-
+    document.getElementById("mainTitle")?.value.trim() || "";
 
   const mainText =
-    document
-      .getElementById("mainText")
-      ?.value
-      .trim() || "";
-
+    document.getElementById("mainText")?.value.trim() || "";
 
   const address =
-    document
-      .getElementById("address")
-      ?.value
-      .trim() || "";
-
+    document.getElementById("address")?.value.trim() || "";
 
   const phone =
-    document
-      .getElementById("phone")
-      ?.value
-      .trim() || "";
+    document.getElementById("phone")?.value.trim() || "";
 
-
-  const existing =
+  const { data: existing, error: readError } =
     await supabaseClient
       .from("site_content")
       .select("id")
       .limit(1)
       .maybeSingle();
 
-
-  if (existing.error) {
-
-    console.error(
-      existing.error
-    );
-
-    alert(
-      "دریافت اطلاعات سایت انجام نشد."
-    );
-
+  if (readError) {
+    console.error(readError);
+    alert("دریافت اطلاعات سایت انجام نشد.");
     return;
-
   }
-
 
   let result;
 
-
-  if (existing.data?.id) {
-
-    result =
-      await supabaseClient
-        .from("site_content")
-        .update({
-
-          main_title:
-            mainTitle,
-
-          main_text:
-            mainText,
-
-          address:
-            address,
-
-          phone:
-            phone
-
-        })
-        .eq(
-          "id",
-          existing.data.id
-        );
-
+  if (existing?.id) {
+    result = await supabaseClient
+      .from("site_content")
+      .update({
+        main_title: mainTitle,
+        main_text: mainText,
+        address: address,
+        phone: phone
+      })
+      .eq("id", existing.id);
   } else {
-
-    result =
-      await supabaseClient
-        .from("site_content")
-        .insert({
-
-          main_title:
-            mainTitle,
-
-          main_text:
-            mainText,
-
-          address:
-            address,
-
-          phone:
-            phone
-
-        });
-
+    result = await supabaseClient
+      .from("site_content")
+      .insert({
+        main_title: mainTitle,
+        main_text: mainText,
+        address: address,
+        phone: phone
+      });
   }
-
 
   if (result.error) {
-
-    console.error(
-      result.error
-    );
-
-    alert(
-      "ذخیره اطلاعات سایت انجام نشد."
-    );
-
+    console.error(result.error);
+    alert("ذخیره اطلاعات سایت انجام نشد.");
     return;
-
   }
 
+  await loadSiteContent();
 
-  alert(
-    "اطلاعات سایت ذخیره شد."
-  );
-
+  alert("اطلاعات سایت ذخیره شد.");
 }
 
 
 // ==================================================
-// ورود
+// ورود مدیر
 // ==================================================
 
 async function login() {
-
   const email =
-    document
-      .getElementById("email")
-      ?.value
-      .trim();
-
+    document.getElementById("email")?.value.trim() || "";
 
   const password =
-    document
-      .getElementById("pass")
-      ?.value;
-
+    document.getElementById("pass")?.value || "";
 
   const err =
-    document.getElementById(
-      "err"
-    );
-
+    document.getElementById("err");
 
   if (!email || !password) {
-
     if (err) {
-
-      err.textContent =
-        "ایمیل و رمز عبور را وارد کنید.";
-
+      err.textContent = "ایمیل و رمز عبور را وارد کنید.";
     }
 
     return;
-
   }
 
+  const { error } =
+    await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
 
-  const result =
-    await supabaseClient.auth
-      .signInWithPassword({
-
-        email:
-          email,
-
-        password:
-          password
-
-      });
-
-
-  if (result.error) {
-
-    console.error(
-      "خطای ورود:",
-      result.error
-    );
-
+  if (error) {
+    console.error("خطای ورود:", error);
 
     if (err) {
-
-      err.textContent =
-        "ایمیل یا رمز عبور اشتباه است.";
-
+      err.textContent = "ایمیل یا رمز عبور اشتباه است.";
     }
 
     return;
-
   }
 
-
-  sessionStorage.setItem(
-    "fan_admin",
-    "1"
-  );
-
+  sessionStorage.setItem("fan_admin", "1");
 
   await showDash();
-
 }
 
 
 // ==================================================
-// نمایش پنل
+// پنل مدیریت
 // ==================================================
 
 async function showDash() {
+  const { data } =
+    await supabaseClient.auth.getSession();
 
-  const loginBox =
-    document.getElementById(
-      "login"
-    );
-
-  const dash =
-    document.getElementById(
-      "dash"
-    );
-
-
-  if (!loginBox || !dash) {
-
+  if (!data?.session) {
+    sessionStorage.removeItem("fan_admin");
     return;
-
   }
 
+  const loginPanel =
+    document.getElementById("login");
 
-  loginBox.classList.add(
-    "hidden"
-  );
+  const dash =
+    document.getElementById("dash");
 
+  if (loginPanel) {
+    loginPanel.classList.add("hidden");
+  }
 
-  dash.classList.remove(
-    "hidden"
-  );
+  if (dash) {
+    dash.classList.remove("hidden");
+  }
 
-
-  const result =
+  const { data: siteData, error } =
     await supabaseClient
       .from("site_content")
       .select("*")
       .limit(1)
       .maybeSingle();
 
-
-  if (
-    !result.error &&
-    result.data
-  ) {
-
-    const data =
-      result.data;
-
-
+  if (!error && siteData) {
     const mainTitle =
-      document.getElementById(
-        "mainTitle"
-      );
+      document.getElementById("mainTitle");
 
     const mainText =
-      document.getElementById(
-        "mainText"
-      );
+      document.getElementById("mainText");
 
     const address =
-      document.getElementById(
-        "address"
-      );
+      document.getElementById("address");
 
     const phone =
-      document.getElementById(
-        "phone"
-      );
-
+      document.getElementById("phone");
 
     if (mainTitle) {
-
-      mainTitle.value =
-        data.main_title || "";
-
+      mainTitle.value = siteData.main_title || "";
     }
-
 
     if (mainText) {
-
-      mainText.value =
-        data.main_text || "";
-
+      mainText.value = siteData.main_text || "";
     }
-
 
     if (address) {
-
-      address.value =
-        data.address || "";
-
+      address.value = siteData.address || "";
     }
-
 
     if (phone) {
-
-      phone.value =
-        data.phone || "";
-
+      phone.value = siteData.phone || "";
     }
-
   }
 
-
   await renderAdmin();
-
 }
 
 
@@ -655,17 +341,11 @@ async function showDash() {
 // ==================================================
 
 async function logout() {
-
   await supabaseClient.auth.signOut();
 
-
-  sessionStorage.removeItem(
-    "fan_admin"
-  );
-
+  sessionStorage.removeItem("fan_admin");
 
   location.reload();
-
 }
 
 
@@ -674,372 +354,207 @@ async function logout() {
 // ==================================================
 
 async function changePass() {
-
   const input =
-    document.getElementById(
-      "newpass"
-    );
-
+    document.getElementById("newpass");
 
   if (!input) return;
 
-
-  const password =
-    input.value;
-
+  const password = input.value;
 
   if (password.length < 6) {
-
-    alert(
-      "رمز باید حداقل ۶ کاراکتر باشد."
-    );
-
+    alert("رمز باید حداقل ۶ کاراکتر باشد.");
     return;
-
   }
 
+  const { error } =
+    await supabaseClient.auth.updateUser({
+      password: password
+    });
 
-  const result =
-    await supabaseClient.auth
-      .updateUser({
-
-        password:
-          password
-
-      });
-
-
-  if (result.error) {
-
-    console.error(
-      result.error
-    );
-
-    alert(
-      "تغییر رمز انجام نشد."
-    );
-
+  if (error) {
+    console.error(error);
+    alert("تغییر رمز انجام نشد.");
     return;
-
   }
-
 
   input.value = "";
 
-
-  alert(
-    "رمز مدیریت تغییر کرد."
-  );
-
+  alert("رمز مدیریت تغییر کرد.");
 }
 
 
 // ==================================================
-// آپلود عکس
+// آپلود تصویر اسلایدر
 // ==================================================
 
-async function uploadSliderImage(
-  file,
-  index
-) {
-
+async function uploadSliderImage(file, index) {
   if (!file) {
-
-    alert(
-      "ابتدا یک تصویر انتخاب کنید."
-    );
-
+    alert("ابتدا یک تصویر انتخاب کنید.");
     return;
-
   }
 
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
 
-  const allowed =
-    [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
-
-
-  if (
-    !allowed.includes(
-      file.type
-    )
-  ) {
-
-    alert(
-      "فقط JPG، PNG یا WebP مجاز است."
-    );
-
+  if (!allowedTypes.includes(file.type)) {
+    alert("فقط JPG، PNG یا WebP مجاز است.");
     return;
-
   }
-
 
   try {
-
-    const image =
-      new Image();
-
+    const image = new Image();
 
     const objectUrl =
-      URL.createObjectURL(
-        file
-      );
+      URL.createObjectURL(file);
 
+    image.src = objectUrl;
 
-    image.src =
-      objectUrl;
-
-
-    await new Promise(
-      function (
-        resolve,
-        reject
-      ) {
-
-        image.onload =
-          resolve;
-
-        image.onerror =
-          reject;
-
-      }
-    );
-
+    await new Promise(function (resolve, reject) {
+      image.onload = resolve;
+      image.onerror = reject;
+    });
 
     const canvas =
-      document.createElement(
-        "canvas"
-      );
+      document.createElement("canvas");
 
-
-    canvas.width =
-      image.naturalWidth;
-
-
-    canvas.height =
-      image.naturalHeight;
-
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
 
     const ctx =
-      canvas.getContext(
-        "2d"
-      );
-
+      canvas.getContext("2d");
 
     ctx.drawImage(
       image,
       0,
-      0
+      0,
+      canvas.width,
+      canvas.height
     );
-
 
     const blob =
-      await new Promise(
-        function (resolve) {
+      await new Promise(function (resolve) {
+        canvas.toBlob(
+          resolve,
+          "image/jpeg",
+          0.9
+        );
+      });
 
-          canvas.toBlob(
-            resolve,
-            "image/jpeg",
-            0.9
-          );
-
-        }
-      );
-
-
-    URL.revokeObjectURL(
-      objectUrl
-    );
-
+    URL.revokeObjectURL(objectUrl);
 
     if (!blob) {
-
-      alert(
-        "تبدیل تصویر انجام نشد."
-      );
-
+      alert("تبدیل تصویر انجام نشد.");
       return;
-
     }
-
 
     const fileName =
       `slider-${index}.jpg`;
 
-
-    const result =
+    const { error } =
       await supabaseClient.storage
         .from("site-images")
         .upload(
           fileName,
           blob,
           {
-
-            upsert:
-              true,
-
-            contentType:
-              "image/jpeg"
-
+            upsert: true,
+            contentType: "image/jpeg",
+            cacheControl: "3600"
           }
         );
 
-
-    if (result.error) {
-
-      console.error(
-        "خطای آپلود:",
-        result.error
-      );
-
-
+    if (error) {
+      console.error("خطای Supabase:", error);
       alert(
-        "آپلود تصویر انجام نشد."
+        "آپلود انجام نشد: " +
+        error.message
       );
-
       return;
-
     }
-
 
     alert(
       `تصویر اسلاید ${index} با موفقیت آپلود شد.`
     );
 
-
     await loadSliderImages();
 
   } catch (error) {
-
-    console.error(
-      "خطای تصویر:",
-      error
-    );
-
+    console.error("خطای آپلود تصویر:", error);
 
     alert(
-      "پردازش تصویر انجام نشد."
+      "آپلود تصویر انجام نشد: " +
+      (error.message || error)
     );
-
   }
-
 }
 
 
 // ==================================================
-// نمایش عکس‌ها
+// دریافت تصاویر اسلایدر
 // ==================================================
 
-async function loadSliderImages() {
-
+function loadSliderImages() {
   const slides =
-    [
-      ...document.querySelectorAll(
-        ".slide"
-      )
-    ];
-
+    [...document.querySelectorAll(".slide")];
 
   if (!slides.length) {
-
     return;
-
   }
 
+  slides.forEach(function (slide) {
+    const index =
+      slide.dataset.index;
 
-  slides.forEach(
-    function (slide) {
-
-      const index =
-        slide.dataset.index;
-
-
-      const img =
-        slide.querySelector(
-          ".slider-image"
-        );
-
-
-      const placeholder =
-        slide.querySelector(
-          ".placeholder"
-        );
-
-
-      if (
-        !img ||
-        !index
-      ) {
-
-        return;
-
-      }
-
-
-      const result =
-        supabaseClient.storage
-          .from("site-images")
-          .getPublicUrl(
-            `slider-${index}.jpg`
-          );
-
-
-      const url =
-        result.data?.publicUrl;
-
-
-      if (!url) {
-
-        return;
-
-      }
-
-
-      img.src =
-        url +
-        "?v=" +
-        Date.now();
-
-
-      img.onload =
-        function () {
-
-          img.style.display =
-            "block";
-
-
-          if (placeholder) {
-
-            placeholder.style.display =
-              "none";
-
-          }
-
-        };
-
-
-      img.onerror =
-        function () {
-
-          img.style.display =
-            "none";
-
-
-          if (placeholder) {
-
-            placeholder.style.display =
-              "flex";
-
-          }
-
-        };
-
+    if (!index) {
+      return;
     }
-  );
 
+    const img =
+      slide.querySelector(".slider-image");
+
+    const placeholder =
+      slide.querySelector(".placeholder");
+
+    if (!img) {
+      return;
+    }
+
+    const result =
+      supabaseClient.storage
+        .from("site-images")
+        .getPublicUrl(
+          `slider-${index}.jpg`
+        );
+
+    const publicUrl =
+      result?.data?.publicUrl;
+
+    if (!publicUrl) {
+      return;
+    }
+
+    img.onload = function () {
+      img.style.display = "block";
+
+      if (placeholder) {
+        placeholder.style.display = "none";
+      }
+    };
+
+    img.onerror = function () {
+      img.style.display = "none";
+
+      if (placeholder) {
+        placeholder.style.display = "flex";
+      }
+    };
+
+    img.src =
+      publicUrl + "?v=" + Date.now();
+  });
 }
 
 
@@ -1049,122 +564,56 @@ async function loadSliderImages() {
 
 let si = 0;
 
-
 function initSlider() {
-
   const slides =
-    [
-      ...document.querySelectorAll(
-        ".slide"
-      )
-    ];
-
+    [...document.querySelectorAll(".slide")];
 
   const dots =
-    document.getElementById(
-      "dots"
-    );
-
+    document.getElementById("dots");
 
   if (!slides.length) {
-
     return;
-
   }
-
 
   if (dots) {
-
     dots.innerHTML =
-      slides.map(
-        function (_, i) {
-
-          return `
-            <span
-              class="dot ${
-                i === 0
-                  ? "on"
-                  : ""
-              }"
-            ></span>
-          `;
-
-        }
-      ).join("");
-
+      slides.map(function (_, i) {
+        return `
+          <span class="dot ${i === 0 ? "on" : ""}"></span>
+        `;
+      }).join("");
   }
 
-
-  setInterval(
-    function () {
-
-      move(1);
-
-    },
-    5000
-  );
-
+  setInterval(function () {
+    move(1);
+  }, 5000);
 }
 
 
 function move(x) {
-
   const slides =
-    [
-      ...document.querySelectorAll(
-        ".slide"
-      )
-    ];
-
+    [...document.querySelectorAll(".slide")];
 
   if (!slides.length) {
-
     return;
-
   }
 
-
-  slides[si]
-    .classList
-    .remove(
-      "active"
-    );
-
+  slides[si].classList.remove("active");
 
   si =
-    (
-      si +
-      x +
-      slides.length
-    ) %
+    (si + x + slides.length) %
     slides.length;
 
-
-  slides[si]
-    .classList
-    .add(
-      "active"
-    );
-
+  slides[si].classList.add("active");
 
   document
-    .querySelectorAll(
-      ".dot"
-    )
-    .forEach(
-      function (
-        dot,
-        i
-      ) {
-
-        dot.classList.toggle(
-          "on",
-          i === si
-        );
-
-      }
-    );
-
+    .querySelectorAll(".dot")
+    .forEach(function (dot, i) {
+      dot.classList.toggle(
+        "on",
+        i === si
+      );
+    });
 }
 
 
@@ -1173,260 +622,155 @@ function move(x) {
 // ==================================================
 
 function toggleMenu() {
-
-  const nav =
-    document.getElementById(
-      "nav"
-    );
-
-
-  if (nav) {
-
-    nav.classList.toggle(
-      "open"
-    );
-
-  }
-
+  document
+    .getElementById("nav")
+    ?.classList.toggle("open");
 }
 
 
 // ==================================================
-// مهم:
-// در دسترس قرار دادن توابع برای onclick
+// افزودن خبر
 // ==================================================
 
-window.login =
-  login;
+async function setupNewsForm() {
+  const form =
+    document.getElementById("form");
 
-window.logout =
-  logout;
+  if (!form) {
+    return;
+  }
 
-window.saveSite =
-  saveSite;
+  form.addEventListener(
+    "submit",
+    async function (e) {
+      e.preventDefault();
 
-window.changePass =
-  changePass;
+      const title =
+        document
+          .getElementById("title")
+          ?.value
+          .trim() || "";
 
-window.delNews =
-  delNews;
+      const body =
+        document
+          .getElementById("body")
+          ?.value
+          .trim() || "";
 
-window.move =
-  move;
+      if (!title || !body) {
+        alert("عنوان و متن خبر را وارد کنید.");
+        return;
+      }
 
-window.toggleMenu =
-  toggleMenu;
+      const { error } =
+        await supabaseClient
+          .from("news")
+          .insert({
+            title: title,
+            body: body,
+            date: new Date().toLocaleDateString("fa-IR")
+          });
+
+      if (error) {
+        console.error("خطای ذخیره خبر:", error);
+        alert("خبر ذخیره نشد: " + error.message);
+        return;
+      }
+
+      form.reset();
+
+      await renderAdmin();
+      await renderNews("newsList", 3);
+      await renderNews("allNews");
+
+      alert("خبر با موفقیت ذخیره شد.");
+    }
+  );
+}
 
 
 // ==================================================
-// شروع
+// اتصال آپلودهای پنل
+// ==================================================
+
+function setupSliderUploads() {
+  document
+    .querySelectorAll(".slider-upload")
+    .forEach(function (input) {
+      input.addEventListener(
+        "change",
+        async function () {
+          const file =
+            input.files?.[0];
+
+          const index =
+            input.dataset.index;
+
+          try {
+            await uploadSliderImage(
+              file,
+              index
+            );
+          } catch (error) {
+            console.error(error);
+            alert(
+              "آپلود تصویر انجام نشد."
+            );
+          }
+
+          input.value = "";
+        }
+      );
+    });
+}
+
+
+// ==================================================
+// شروع برنامه
 // ==================================================
 
 document.addEventListener(
   "DOMContentLoaded",
   async function () {
 
-    const isAdmin =
+    await renderNews(
+      "newsList",
+      3
+    );
+
+    await loadSiteContent();
+
+    await renderNews(
+      "allNews"
+    );
+
+    await loadSliderImages();
+
+    initSlider();
+
+    await setupNewsForm();
+
+    setupSliderUploads();
+
+
+    // فقط در admin
+    if (
       location.pathname
         .toLowerCase()
-        .endsWith(
-          "admin.html"
+        .endsWith("admin.html")
+    ) {
+      const { data } =
+        await supabaseClient.auth.getSession();
+
+      if (data?.session) {
+        sessionStorage.setItem(
+          "fan_admin",
+          "1"
         );
 
-
-    // -------------------------------
-    // سایت اصلی
-    // -------------------------------
-
-    if (!isAdmin) {
-
-      await renderNews(
-        "newsList",
-        3
-      );
-
-
-      await loadSiteContent();
-
-
-      await renderNews(
-        "allNews"
-      );
-
-
-      await loadSliderImages();
-
-
-      initSlider();
-
-      return;
-
+        await showDash();
+      }
     }
-
-
-    // -------------------------------
-    // پنل مدیریت
-    // -------------------------------
-
-    const session =
-      await supabaseClient.auth
-        .getSession();
-
-
-    if (
-      session.data?.session
-    ) {
-
-      sessionStorage.setItem(
-        "fan_admin",
-        "1"
-      );
-
-
-      await showDash();
-
-    }
-
-
-    // -------------------------------
-    // فرم خبر
-    // -------------------------------
-
-    const form =
-      document.getElementById(
-        "form"
-      );
-
-
-    if (form) {
-
-      form.addEventListener(
-        "submit",
-        async function (e) {
-
-          e.preventDefault();
-
-
-          const title =
-            document
-              .getElementById(
-                "title"
-              )
-              ?.value
-              .trim();
-
-
-          const body =
-            document
-              .getElementById(
-                "body"
-              )
-              ?.value
-              .trim();
-
-
-          if (!title || !body) {
-
-            alert(
-              "عنوان و متن خبر را وارد کنید."
-            );
-
-            return;
-
-          }
-
-
-          const result =
-            await supabaseClient
-              .from("news")
-              .insert({
-
-                title:
-                  title,
-
-                body:
-                  body,
-
-                date:
-                  new Date()
-                    .toLocaleDateString(
-                      "fa-IR"
-                    )
-
-              });
-
-
-          if (result.error) {
-
-            console.error(
-              "خطای ذخیره خبر:",
-              result.error
-            );
-
-
-            alert(
-              "خبر ذخیره نشد."
-            );
-
-            return;
-
-          }
-
-
-          form.reset();
-
-
-          await renderAdmin();
-
-
-          alert(
-            "خبر با موفقیت ذخیره شد."
-          );
-
-        }
-      );
-
-    }
-
-
-    // -------------------------------
-    // آپلود عکس
-    // -------------------------------
-
-    document
-      .querySelectorAll(
-        ".slider-upload"
-      )
-      .forEach(
-        function (input) {
-
-          input.addEventListener(
-            "change",
-            async function () {
-
-              const file =
-                input.files?.[0];
-
-
-              const index =
-                input.dataset.index;
-
-
-              await uploadSliderImage(
-                file,
-                index
-              );
-
-
-              input.value =
-                "";
-
-            }
-          );
-
-        }
-      );
-
   }
 );
-```
+
