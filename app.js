@@ -50,7 +50,21 @@ async function loadSiteContent() {
     if (i === 1) p.textContent = data.phone || "";
   });
 }
-function renderNews(id,limit){let el=document.getElementById(id);if(!el)return;let n=getNews().slice(0,limit||99);el.innerHTML=n.map(x=>`<article class="news"><div class="date">${x.date||""}</div><h3>${esc(x.title)}</h3><p>${esc(x.body)}</p></article>`).join("")}
+async function renderNews(id,limit){
+  let el=document.getElementById(id);
+  if(!el)return;
+
+  let n = await getNews();
+  n = n.slice(0,limit||99);
+
+  el.innerHTML=n.map(x=>`
+    <article class="news">
+      <div class="date">${x.date||""}</div>
+      <h3>${esc(x.title)}</h3>
+      <p>${esc(x.body)}</p>
+    </article>
+  `).join("");
+}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function toggleMenu(){document.getElementById("nav")?.classList.toggle("open")}
 let si=0;function initSlider(){let s=[...document.querySelectorAll(".slide")],d=document.getElementById("dots");if(!s.length)return;d.innerHTML=s.map((_,i)=>`<span class="dot ${i==0?"on":""}"></span>`).join("");setInterval(()=>move(1),5000)}
