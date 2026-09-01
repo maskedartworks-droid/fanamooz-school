@@ -1,21 +1,236 @@
-<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مدیریت | هنرستان فن آموز</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="top"><div class="brand"><div class="logo">ف</div><div><h1>پنل مدیریت</h1><small>هنرستان فن آموز</small></div></div><a class="back" href="index.html">← سایت</a></header>
+```html
+<!doctype html>
+<html lang="fa" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>مدیریت | هنرستان فن آموز</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="top">
+
+  <div class="brand">
+    <div class="logo">ف</div>
+
+    <div>
+      <h1>پنل مدیریت</h1>
+      <small>هنرستان فن آموز</small>
+    </div>
+  </div>
+
+  <a class="back" href="index.html">← سایت</a>
+
+</header>
+
+
 <main class="admin">
-<div id="login" class="panel"><h2>ورود مدیر</h2><p class="muted">برای نسخه اولیه، رمز پیش‌فرض <b>1234</b> است؛ حتماً بعداً تغییرش دهید.</p><input id="email" type="email" placeholder="ایمیل مدیر">
-<input id="pass" type="password" placeholder="رمز مدیریت">
-<button onclick="login()">ورود</button><p id="err"></p></div>
-<div id="dash" class="panel hidden"><div class="section-title"><span>مدیریت اخبار</span><button class="small" onclick="logout()">خروج</button></div>
-  <hr>
-<h3>ویرایش اطلاعات سایت</h3>
 
-<input id="mainTitle" type="text" placeholder="عنوان اصلی">
-<textarea id="mainText" placeholder="متن اصلی"></textarea>
-<input id="address" type="text" placeholder="آدرس">
-<input id="phone" type="text" placeholder="شماره تلفن">
+  <!-- ورود مدیر -->
 
-<button type="button" onclick="saveSite()">ذخیره اطلاعات سایت</button>
-<form id="form"><input id="title" required placeholder="عنوان خبر"><textarea id="body" required placeholder="متن خبر"></textarea><button>افزودن خبر</button></form>
-<div id="adminNews"></div>
-<hr><h3>تغییر رمز مدیریت</h3><input id="newpass" type="password" placeholder="رمز جدید"><button onclick="changePass()">ذخیره رمز</button>
-<p class="muted">برای افزودن عکس اسلایدر، بعد از انتشار سایت می‌توانید فایل‌های تصویر را جایگزین کنید. در نسخه بعدی می‌توان آپلود آنلاین تصویر را هم اضافه کرد.</p>
-</div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="app.js"></script></body></html>
+  <div id="login" class="panel">
+
+    <h2>ورود مدیر</h2>
+
+    <p class="muted">
+      ورود با ایمیل و رمز عبور مدیر
+    </p>
+
+    <input
+      id="email"
+      type="email"
+      placeholder="ایمیل مدیر"
+    >
+
+    <input
+      id="pass"
+      type="password"
+      placeholder="رمز مدیریت"
+    >
+
+    <button onclick="login()">
+      ورود
+    </button>
+
+    <p id="err"></p>
+
+  </div>
+
+
+  <!-- داشبورد -->
+
+  <div id="dash" class="panel hidden">
+
+    <div class="section-title">
+
+      <span>مدیریت سایت</span>
+
+      <button
+        class="small"
+        onclick="logout()"
+      >
+        خروج
+      </button>
+
+    </div>
+
+
+    <!-- اطلاعات سایت -->
+
+    <hr>
+
+    <h3>ویرایش اطلاعات سایت</h3>
+
+    <input
+      id="mainTitle"
+      type="text"
+      placeholder="عنوان اصلی"
+    >
+
+    <textarea
+      id="mainText"
+      placeholder="متن اصلی"
+    ></textarea>
+
+    <input
+      id="address"
+      type="text"
+      placeholder="آدرس"
+    >
+
+    <input
+      id="phone"
+      type="text"
+      placeholder="شماره تلفن"
+    >
+
+    <button
+      type="button"
+      onclick="saveSite()"
+    >
+      ذخیره اطلاعات سایت
+    </button>
+
+
+    <!-- اخبار -->
+
+    <hr>
+
+    <h3>مدیریت اخبار</h3>
+
+    <form id="form">
+
+      <input
+        id="title"
+        required
+        placeholder="عنوان خبر"
+      >
+
+      <textarea
+        id="body"
+        required
+        placeholder="متن خبر"
+      ></textarea>
+
+      <button type="submit">
+        افزودن خبر
+      </button>
+
+    </form>
+
+    <div id="adminNews"></div>
+
+
+    <!-- تصاویر اسلایدر -->
+
+    <hr>
+
+    <h3>مدیریت تصاویر اسلایدر</h3>
+
+    <p class="muted">
+      فقط تصویر JPG یا JPEG انتخاب کنید.
+    </p>
+
+
+    <div class="slider-admin">
+
+      <label>
+        تصویر اسلاید ۱
+        <input
+          type="file"
+          class="slider-upload"
+          data-index="1"
+          accept="image/jpeg"
+        >
+      </label>
+
+
+      <label>
+        تصویر اسلاید ۲
+        <input
+          type="file"
+          class="slider-upload"
+          data-index="2"
+          accept="image/jpeg"
+        >
+      </label>
+
+
+      <label>
+        تصویر اسلاید ۳
+        <input
+          type="file"
+          class="slider-upload"
+          data-index="3"
+          accept="image/jpeg"
+        >
+      </label>
+
+    </div>
+
+
+    <!-- تغییر رمز -->
+
+    <hr>
+
+    <h3>تغییر رمز مدیریت</h3>
+
+    <input
+      id="newpass"
+      type="password"
+      placeholder="رمز جدید"
+    >
+
+    <button
+      type="button"
+      onclick="changePass()"
+    >
+      ذخیره رمز
+    </button>
+
+
+    <p class="muted">
+      تصاویر در فضای ذخیره‌سازی Supabase قرار می‌گیرند.
+    </p>
+
+  </div>
+
+</main>
+
+
+<!-- Supabase -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- برنامه -->
+
+<script src="app.js"></script>
+
+</body>
+</html>
+```
