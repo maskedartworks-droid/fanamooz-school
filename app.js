@@ -349,20 +349,31 @@ async function uploadSliderImage(file, index) {
     return;
   }
 
-  if (file.type !== "image/jpeg") {
-    alert("فقط فایل JPG یا JPEG مجاز است.");
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    alert("فقط JPG، PNG و WebP مجاز هستند.");
     return;
   }
 
-  const fileName = `slider-${index}.jpg`;
+  const extension = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp"
+  }[file.type];
 
-  const { error } =
-    await supabaseClient.storage
-      .from("site-images")
-      .upload(fileName, file, {
-        upsert: true,
-        contentType: "image/jpeg"
-      });
+  const fileName = `slider-${index}.${extension}`;
+
+  const { error } = await supabaseClient.storage
+    .from("site-images")
+    .upload(fileName, file, {
+      upsert: true,
+      contentType: file.type
+    });
 
   if (error) {
     console.error("خطا در آپلود تصویر:", error);
@@ -372,8 +383,6 @@ async function uploadSliderImage(file, index) {
 
   alert(`تصویر اسلاید ${index} با موفقیت آپلود شد.`);
 }
-
-
 // =========================
 // اسلایدر
 // =========================
