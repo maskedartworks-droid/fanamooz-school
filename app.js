@@ -91,11 +91,26 @@ async function login() {
   }
 
   sessionStorage.fan_admin = "1";
-  showDash();
+  async function showDash() {
+  if (sessionStorage.fan_admin !== "1") return;
+
+  document.getElementById("login")?.classList.add("hidden");
+  document.getElementById("dash")?.classList.remove("hidden");
+
+  const s = getSite();
+
+  const mainTitle = document.getElementById("mainTitle");
+  const mainText = document.getElementById("mainText");
+  const address = document.getElementById("address");
+  const phone = document.getElementById("phone");
+
+  if (mainTitle) mainTitle.value = s.mainTitle;
+  if (mainText) mainText.value = s.mainText;
+  if (address) address.value = s.address;
+  if (phone) phone.value = s.phone;
+
+  await renderAdmin();
 }
-function showDash(){if(sessionStorage.fan_admin!=="1")return;document.getElementById("login").classList.add("hidden");document.getElementById("dash").classList.remove("hidden");renderAdmin()}
-function logout(){sessionStorage.removeItem("fan_admin");location.reload()}
-function renderAdmin(){let e=document.getElementById("adminNews");if(!e)return;e.innerHTML=getNews().map((x,i)=>`<div class="admin-item"><b>${esc(x.title)}</b><p>${esc(x.body)}</p><button onclick="delNews(${i})">حذف</button></div>`).join("")}
 function delNews(i){let n=getNews();n.splice(i,1);saveNews(n);renderAdmin()}
 function changePass(){let p=document.getElementById("newpass").value;if(p.length<4)return alert("رمز باید حداقل ۴ کاراکتر باشد.");localStorage.setItem("fan_pass",p);alert("رمز ذخیره شد.")}
 document.addEventListener("DOMContentLoaded", async () => {
