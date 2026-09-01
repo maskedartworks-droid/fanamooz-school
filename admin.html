@@ -5,6 +5,15 @@
 <input id="pass" type="password" placeholder="رمز مدیریت">
 <button onclick="login()">ورود</button><p id="err"></p></div>
 <div id="dash" class="panel hidden"><div class="section-title"><span>مدیریت اخبار</span><button class="small" onclick="logout()">خروج</button></div>
+  <hr>
+<h3>ویرایش اطلاعات سایت</h3>
+
+<input id="mainTitle" type="text" placeholder="عنوان اصلی">
+<textarea id="mainText" placeholder="متن اصلی"></textarea>
+<input id="address" type="text" placeholder="آدرس">
+<input id="phone" type="text" placeholder="شماره تلفن">
+
+<button type="button" onclick="saveSite()">ذخیره اطلاعات سایت</button>
 <form id="form"><input id="title" required placeholder="عنوان خبر"><textarea id="body" required placeholder="متن خبر"></textarea><button>افزودن خبر</button></form>
 <div id="adminNews"></div>
 <hr><h3>تغییر رمز مدیریت</h3><input id="newpass" type="password" placeholder="رمز جدید"><button onclick="changePass()">ذخیره رمز</button>
