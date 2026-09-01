@@ -98,4 +98,43 @@ function logout(){sessionStorage.removeItem("fan_admin");location.reload()}
 function renderAdmin(){let e=document.getElementById("adminNews");if(!e)return;e.innerHTML=getNews().map((x,i)=>`<div class="admin-item"><b>${esc(x.title)}</b><p>${esc(x.body)}</p><button onclick="delNews(${i})">حذف</button></div>`).join("")}
 function delNews(i){let n=getNews();n.splice(i,1);saveNews(n);renderAdmin()}
 function changePass(){let p=document.getElementById("newpass").value;if(p.length<4)return alert("رمز باید حداقل ۴ کاراکتر باشد.");localStorage.setItem("fan_pass",p);alert("رمز ذخیره شد.")}
-document.addEventListener("DOMContentLoaded",()=>{renderNews("newsList",3);loadSiteContent();renderNews("allNews");initSlider();if(location.pathname.endsWith("admin.html"))showDash();document.getElementById("form")?.addEventListener("submit",e=>{e.preventDefault();let n=getNews();n.unshift({title:title.value,body:body.value,date:new Date().toLocaleDateString("fa-IR")});saveNews(n);e.target.reset();renderAdmin()})})
+document.addEventListener("DOMContentLoaded", async () => {
+  await renderNews("newsList", 3);
+  await loadSiteContent();
+  await renderNews("allNews");
+
+  initSlider();
+
+  if (location.pathname.toLowerCase().endsWith("admin.html")) {
+    showDash();
+  }
+
+  document.getElementById("form")?.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const titleInput = document.getElementById("title");
+    const bodyInput = document.getElementById("body");
+
+    const { error } = await supabaseClient
+      .from("news")
+      .insert({
+        title: titleInput.value.trim(),
+        body: bodyInput.value.trim(),
+        date: new Date().toLocaleDateString("fa-IR")
+      });
+
+    if (error) {
+      console.error(error);
+      alert("ذخیره خبر انجام نشد.");
+      return;
+    }
+
+    e.target.reset();
+
+    await renderAdmin();
+    await renderNews("newsList", 3);
+    await renderNews("allNews");
+
+    alert("خبر با موفقیت ذخیره شد.");
+  });
+});
