@@ -1,3 +1,5 @@
+const SUPABASE_URL = "https://whjeurwstvryrrpgwigz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_TqfUbviGYULqP3pdl1ug2Q_NXruETS0";
 const DEFAULT_NEWS=[
  {title:"آغاز به کار وب‌سایت هنرستان فن آموز",body:"به وب‌سایت رسمی هنرستان فن آموز خوش آمدید. اخبار و اطلاعیه‌های جدید از این بخش منتشر می‌شود.",date:"۱۴۰۵/۰۶/۰۱"},
  {title:"اطلاعیه هنرستان",body:"اطلاعیه‌های مهم آموزشی و برنامه‌های هنرستان در این قسمت قرار می‌گیرد.",date:"۱۴۰۵/۰۶/۰۱"}
@@ -9,7 +11,29 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
 function toggleMenu(){document.getElementById("nav")?.classList.toggle("open")}
 let si=0;function initSlider(){let s=[...document.querySelectorAll(".slide")],d=document.getElementById("dots");if(!s.length)return;d.innerHTML=s.map((_,i)=>`<span class="dot ${i==0?"on":""}"></span>`).join("");setInterval(()=>move(1),5000)}
 function move(x){let s=[...document.querySelectorAll(".slide")];if(!s.length)return;s[si].classList.remove("active");si=(si+x+s.length)%s.length;s[si].classList.add("active");document.querySelectorAll(".dot").forEach((d,i)=>d.classList.toggle("on",i==si))}
-function login(){let p=localStorage.getItem("fan_pass")||"1234";if(document.getElementById("pass").value===p){sessionStorage.fan_admin="1";showDash()}else document.getElementById("err").textContent="رمز ورود اشتباه است."}
+async function login() {
+  const email = prompt("ایمیل مدیر Supabase را وارد کنید:");
+  const password = document.getElementById("pass").value;
+
+  if (!email || !password) {
+    document.getElementById("err").textContent = "ایمیل و رمز را وارد کنید.";
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    document.getElementById("err").textContent =
+      "ایمیل یا رمز عبور اشتباه است.";
+    return;
+  }
+
+  sessionStorage.fan_admin = "1";
+  showDash();
+}
 function showDash(){if(sessionStorage.fan_admin!=="1")return;document.getElementById("login").classList.add("hidden");document.getElementById("dash").classList.remove("hidden");renderAdmin()}
 function logout(){sessionStorage.removeItem("fan_admin");location.reload()}
 function renderAdmin(){let e=document.getElementById("adminNews");if(!e)return;e.innerHTML=getNews().map((x,i)=>`<div class="admin-item"><b>${esc(x.title)}</b><p>${esc(x.body)}</p><button onclick="delNews(${i})">حذف</button></div>`).join("")}
