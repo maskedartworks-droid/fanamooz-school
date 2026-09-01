@@ -78,6 +78,7 @@ async function renderAdmin() {
 
 
 async function delNews(id) {
+
   if (!confirm("این خبر حذف شود؟")) return;
 
   const { error } = await supabaseClient
@@ -104,11 +105,13 @@ async function delNews(id) {
 // =========================
 
 async function loadSiteContent() {
-  const { data, error } = await supabaseClient
-    .from("site_content")
-    .select("*")
-    .limit(1)
-    .maybeSingle();
+
+  const { data, error } =
+    await supabaseClient
+      .from("site_content")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
 
   if (error) {
     console.error("خطا در دریافت اطلاعات سایت:", error);
@@ -117,47 +120,84 @@ async function loadSiteContent() {
 
   if (!data) return;
 
-  const title = document.querySelector(".about h2");
-  const text = document.querySelector(".about p");
-  const address = document.querySelector(".card p");
-  const phone = document.querySelector(".card p[dir='ltr']");
 
-  if (title) title.textContent = data.main_title || "";
-  if (text) text.textContent = data.main_text || "";
-  if (address) address.textContent = data.address || "";
-  if (phone) phone.textContent = data.phone || "";
+  const title =
+    document.querySelector(".about h2");
 
-  document.querySelectorAll("footer p").forEach((p, i) => {
-    if (i === 0) p.textContent = data.address || "";
-    if (i === 1) p.textContent = data.phone || "";
-  });
+  const text =
+    document.querySelector(".about p");
+
+  const address =
+    document.querySelector(".card p");
+
+  const phone =
+    document.querySelector(".card p[dir='ltr']");
+
+
+  if (title)
+    title.textContent = data.main_title || "";
+
+  if (text)
+    text.textContent = data.main_text || "";
+
+  if (address)
+    address.textContent = data.address || "";
+
+  if (phone)
+    phone.textContent = data.phone || "";
+
+
+  document
+    .querySelectorAll("footer p")
+    .forEach((p, i) => {
+
+      if (i === 0)
+        p.textContent = data.address || "";
+
+      if (i === 1)
+        p.textContent = data.phone || "";
+
+    });
 }
 
 
+// =========================
+// ذخیره اطلاعات سایت
+// =========================
+
 async function saveSite() {
+
   const mainTitle =
-    document.getElementById("mainTitle")?.value.trim() || "";
+    document.getElementById("mainTitle")
+      ?.value.trim() || "";
 
   const mainText =
-    document.getElementById("mainText")?.value.trim() || "";
+    document.getElementById("mainText")
+      ?.value.trim() || "";
 
   const address =
-    document.getElementById("address")?.value.trim() || "";
+    document.getElementById("address")
+      ?.value.trim() || "";
 
   const phone =
-    document.getElementById("phone")?.value.trim() || "";
+    document.getElementById("phone")
+      ?.value.trim() || "";
 
 
-  const { data: existing, error: readError } = await supabaseClient
-    .from("site_content")
-    .select("id")
-    .limit(1)
-    .maybeSingle();
+  const { data: existing, error: readError } =
+    await supabaseClient
+      .from("site_content")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
 
 
   if (readError) {
+
     console.error(readError);
+
     alert("دریافت اطلاعات سایت انجام نشد.");
+
     return;
   }
 
@@ -167,32 +207,38 @@ async function saveSite() {
 
   if (existing?.id) {
 
-    result = await supabaseClient
-      .from("site_content")
-      .update({
-        main_title: mainTitle,
-        main_text: mainText,
-        address: address,
-        phone: phone
-      })
-      .eq("id", existing.id);
+    result =
+      await supabaseClient
+        .from("site_content")
+        .update({
+          main_title: mainTitle,
+          main_text: mainText,
+          address: address,
+          phone: phone
+        })
+        .eq("id", existing.id);
 
   } else {
 
-    result = await supabaseClient
-      .from("site_content")
-      .insert({
-        main_title: mainTitle,
-        main_text: mainText,
-        address: address,
-        phone: phone
-      });
+    result =
+      await supabaseClient
+        .from("site_content")
+        .insert({
+          main_title: mainTitle,
+          main_text: mainText,
+          address: address,
+          phone: phone
+        });
+
   }
 
 
   if (result.error) {
+
     console.error(result.error);
+
     alert("ذخیره اطلاعات سایت انجام نشد.");
+
     return;
   }
 
@@ -210,20 +256,22 @@ async function saveSite() {
 async function login() {
 
   const email =
-    document.getElementById("email")?.value.trim();
+    document.getElementById("email")
+      ?.value.trim();
 
   const password =
-    document.getElementById("pass")?.value;
+    document.getElementById("pass")
+      ?.value;
 
   const err =
     document.getElementById("err");
 
 
   if (!email || !password) {
-    if (err) {
+
+    if (err)
       err.textContent =
         "ایمیل و رمز عبور را وارد کنید.";
-    }
 
     return;
   }
@@ -231,18 +279,18 @@ async function login() {
 
   const { error } =
     await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
+      email,
+      password
     });
 
 
   if (error) {
+
     console.error(error);
 
-    if (err) {
+    if (err)
       err.textContent =
         "ایمیل یا رمز عبور اشتباه است.";
-    }
 
     return;
   }
@@ -250,7 +298,7 @@ async function login() {
 
   sessionStorage.fan_admin = "1";
 
-  showDash();
+  await showDash();
 }
 
 
@@ -260,9 +308,8 @@ async function login() {
 
 async function showDash() {
 
-  if (sessionStorage.fan_admin !== "1") {
+  if (sessionStorage.fan_admin !== "1")
     return;
-  }
 
 
   document
@@ -299,22 +346,31 @@ async function showDash() {
 
 
     if (mainTitle)
-      mainTitle.value = data.main_title || "";
+      mainTitle.value =
+        data.main_title || "";
 
     if (mainText)
-      mainText.value = data.main_text || "";
+      mainText.value =
+        data.main_text || "";
 
     if (address)
-      address.value = data.address || "";
+      address.value =
+        data.address || "";
 
     if (phone)
-      phone.value = data.phone || "";
+      phone.value =
+        data.phone || "";
+
   }
 
 
   await renderAdmin();
 }
 
+
+// =========================
+// خروج
+// =========================
 
 async function logout() {
 
@@ -338,24 +394,32 @@ async function changePass() {
   if (!input) return;
 
 
-  const password = input.value;
+  const password =
+    input.value;
 
 
   if (password.length < 6) {
-    alert("رمز باید حداقل ۶ کاراکتر باشد.");
+
+    alert(
+      "رمز باید حداقل ۶ کاراکتر باشد."
+    );
+
     return;
   }
 
 
   const { error } =
     await supabaseClient.auth.updateUser({
-      password: password
+      password
     });
 
 
   if (error) {
+
     console.error(error);
+
     alert("تغییر رمز انجام نشد.");
+
     return;
   }
 
@@ -363,6 +427,68 @@ async function changePass() {
   input.value = "";
 
   alert("رمز مدیریت تغییر کرد.");
+}
+
+
+// =========================
+// آپلود تصاویر اسلایدر
+// =========================
+
+async function uploadSliderImage(file, index) {
+
+  if (!file) {
+
+    alert("ابتدا یک تصویر انتخاب کنید.");
+
+    return;
+  }
+
+
+  if (file.type !== "image/jpeg") {
+
+    alert(
+      "فقط فایل JPG یا JPEG مجاز است."
+    );
+
+    return;
+  }
+
+
+  const fileName =
+    `slider-${index}.jpg`;
+
+
+  const { error } =
+    await supabaseClient.storage
+      .from("site-images")
+      .upload(
+        fileName,
+        file,
+        {
+          upsert: true,
+          contentType: "image/jpeg"
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "خطا در آپلود تصویر:",
+      error
+    );
+
+    alert(
+      "آپلود تصویر انجام نشد."
+    );
+
+    return;
+  }
+
+
+  alert(
+    `تصویر اسلاید ${index} با موفقیت آپلود شد.`
+  );
 }
 
 
@@ -382,19 +508,26 @@ function initSlider() {
     document.getElementById("dots");
 
 
-  if (!slides.length) return;
+  if (!slides.length)
+    return;
 
 
   if (dots) {
 
-    dots.innerHTML = slides.map((_, i) =>
-      `<span class="dot ${i === 0 ? "on" : ""}"></span>`
-    ).join("");
+    dots.innerHTML =
+      slides.map((_, i) =>
+        `<span class="dot ${
+          i === 0 ? "on" : ""
+        }"></span>`
+      ).join("");
+
   }
 
 
   setInterval(() => {
+
     move(1);
+
   }, 5000);
 }
 
@@ -404,10 +537,13 @@ function move(x) {
   const slides =
     [...document.querySelectorAll(".slide")];
 
-  if (!slides.length) return;
+  if (!slides.length)
+    return;
 
 
-  slides[si].classList.remove("active");
+  slides[si]
+    .classList
+    .remove("active");
 
 
   si =
@@ -415,22 +551,34 @@ function move(x) {
     slides.length;
 
 
-  slides[si].classList.add("active");
+  slides[si]
+    .classList
+    .add("active");
 
 
   document
     .querySelectorAll(".dot")
     .forEach((dot, i) => {
-      dot.classList.toggle("on", i === si);
+
+      dot.classList.toggle(
+        "on",
+        i === si
+      );
+
     });
 }
 
+
+// =========================
+// منو
+// =========================
 
 function toggleMenu() {
 
   document
     .getElementById("nav")
-    ?.classList.toggle("open");
+    ?.classList
+    .toggle("open");
 }
 
 
@@ -442,11 +590,19 @@ document.addEventListener(
   "DOMContentLoaded",
   async () => {
 
-    await renderNews("newsList", 3);
+    await renderNews(
+      "newsList",
+      3
+    );
+
 
     await loadSiteContent();
 
-    await renderNews("allNews");
+
+    await renderNews(
+      "allNews"
+    );
+
 
     initSlider();
 
@@ -457,13 +613,20 @@ document.addEventListener(
         .endsWith("admin.html")
     ) {
 
-      if (sessionStorage.fan_admin === "1") {
+      if (
+        sessionStorage.fan_admin === "1"
+      ) {
+
         await showDash();
+
       }
+
     }
 
 
+    // -------------------------
     // افزودن خبر
+    // -------------------------
 
     document
       .getElementById("form")
@@ -482,14 +645,20 @@ document.addEventListener(
 
 
           const title =
-            titleInput?.value.trim();
+            titleInput
+              ?.value.trim();
 
           const body =
-            bodyInput?.value.trim();
+            bodyInput
+              ?.value.trim();
 
 
           if (!title || !body) {
-            alert("عنوان و متن خبر را وارد کنید.");
+
+            alert(
+              "عنوان و متن خبر را وارد کنید."
+            );
+
             return;
           }
 
@@ -498,10 +667,13 @@ document.addEventListener(
             await supabaseClient
               .from("news")
               .insert({
-                title: title,
-                body: body,
-                date: new Date()
-                  .toLocaleDateString("fa-IR")
+                title,
+                body,
+                date:
+                  new Date()
+                    .toLocaleDateString(
+                      "fa-IR"
+                    )
               });
 
 
@@ -522,13 +694,60 @@ document.addEventListener(
 
           await renderAdmin();
 
-          await renderNews("newsList", 3);
 
-          await renderNews("allNews");
+          await renderNews(
+            "newsList",
+            3
+          );
 
 
-          alert("خبر با موفقیت ذخیره شد.");
+          await renderNews(
+            "allNews"
+          );
+
+
+          alert(
+            "خبر با موفقیت ذخیره شد."
+          );
+
         }
       );
+
+
+    // -------------------------
+    // آپلود اسلایدر
+    // -------------------------
+
+    document
+      .querySelectorAll(
+        ".slider-upload"
+      )
+      .forEach(input => {
+
+        input.addEventListener(
+          "change",
+          async () => {
+
+            const file =
+              input.files?.[0];
+
+            const index =
+              input.dataset.index;
+
+
+            await uploadSliderImage(
+              file,
+              index
+            );
+
+
+            input.value = "";
+
+          }
+        );
+
+      });
+
   }
 );
+```
