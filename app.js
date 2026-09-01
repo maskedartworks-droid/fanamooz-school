@@ -228,43 +228,81 @@ async function saveSite() {
 // ورود مدیر
 // ==================================================
 
+
 async function login() {
-  const email =
-    document.getElementById("email")?.value.trim() || "";
+  const emailInput = document.getElementById("email");
+  const passInput = document.getElementById("pass");
+  const err = document.getElementById("err");
 
-  const password =
-    document.getElementById("pass")?.value || "";
+  const email = emailInput ? emailInput.value.trim() : "";
+  const password = passInput ? passInput.value : "";
 
-  const err =
-    document.getElementById("err");
+  if (err) {
+    err.textContent = "";
+  }
 
   if (!email || !password) {
     if (err) {
       err.textContent = "ایمیل و رمز عبور را وارد کنید.";
     }
-
     return;
   }
 
-  const { error } =
-    await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+  try {
+    const result =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
 
-  if (error) {
-    console.error("خطای ورود:", error);
+    if (result.error) {
+      console.error("LOGIN ERROR:", result.error);
 
-    if (err) {
-      err.textContent = "ایمیل یا رمز عبور اشتباه است.";
+      if (err) {
+        err.textContent =
+          "ورود ناموفق بود: " +
+          result.error.message;
+      }
+
+      return;
     }
 
-    return;
+    if (!result.data || !result.data.session) {
+      if (err) {
+        err.textContent =
+          "ورود انجام نشد و Session ساخته نشد.";
+      }
+
+      return;
+    }
+
+    sessionStorage.setItem("fan_admin", "1");
+
+    const loginBox =
+      document.getElementById("login");
+
+    const dash =
+      document.getElementById("dash");
+
+    if (loginBox) {
+      loginBox.classList.add("hidden");
+    }
+
+    if (dash) {
+      dash.classList.remove("hidden");
+    }
+
+    await showDash();
+
+  } catch (error) {
+    console.error("LOGIN EXCEPTION:", error);
+
+    if (err) {
+      err.textContent =
+        "خطای غیرمنتظره در ورود: " +
+        (error.message || error);
+    }
   }
-
-  sessionStorage.setItem("fan_admin", "1");
-
-  await showDash();
 }
 
 
