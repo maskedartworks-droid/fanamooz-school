@@ -236,3 +236,76 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 ```
+function saveImages() {
+  const files = [
+    document.getElementById("image1")?.files[0],
+    document.getElementById("image2")?.files[0],
+    document.getElementById("image3")?.files[0]
+  ];
+
+  let images = JSON.parse(localStorage.getItem("fan_images") || "[]");
+
+  let done = 0;
+
+  files.forEach((file, index) => {
+    if (!file) {
+      done++;
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      images[index] = e.target.result;
+      done++;
+
+      if (done === files.length) {
+        localStorage.setItem("fan_images", JSON.stringify(images));
+        applyImages();
+        showImagePreview();
+        alert("تصاویر ذخیره شدند.");
+      }
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  if (files.every(file => !file)) {
+    alert("حداقل یک تصویر انتخاب کن.");
+  }
+}
+
+function applyImages() {
+  const images = JSON.parse(localStorage.getItem("fan_images") || "[]");
+  const slides = document.querySelectorAll(".slide");
+
+  slides.forEach((slide, index) => {
+    const placeholder = slide.querySelector(".placeholder");
+
+    if (images[index]) {
+      slide.style.backgroundImage = `url("${images[index]}")`;
+      slide.style.backgroundSize = "cover";
+      slide.style.backgroundPosition = "center";
+
+      if (placeholder) {
+        placeholder.style.display = "none";
+      }
+    }
+  });
+}
+
+function showImagePreview() {
+  const box = document.getElementById("imagePreview");
+  if (!box) return;
+
+  const images = JSON.parse(localStorage.getItem("fan_images") || "[]");
+
+  box.innerHTML = images.map((img, i) =>
+    img ? `
+      <div style="margin:10px 0">
+        <p>تصویر ${i + 1}</p>
+        <img src="${img}" style="max-width:100%;border-radius:10px">
+      </div>
+    ` : ""
+  ).join("");
+}
