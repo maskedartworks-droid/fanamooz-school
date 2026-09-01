@@ -1,0 +1,10 @@
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مدیریت | هنرستان فن آموز</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="top"><div class="brand"><div class="logo">ف</div><div><h1>پنل مدیریت</h1><small>هنرستان فن آموز</small></div></div><a class="back" href="index.html">← سایت</a></header>
+<main class="admin">
+<div id="login" class="panel"><h2>ورود مدیر</h2><p class="muted">برای نسخه اولیه، رمز پیش‌فرض <b>1234</b> است؛ حتماً بعداً تغییرش دهید.</p><input id="pass" type="password" placeholder="رمز مدیریت"><button onclick="login()">ورود</button><p id="err"></p></div>
+<div id="dash" class="panel hidden"><div class="section-title"><span>مدیریت اخبار</span><button class="small" onclick="logout()">خروج</button></div>
+<form id="form"><input id="title" required placeholder="عنوان خبر"><textarea id="body" required placeholder="متن خبر"></textarea><button>افزودن خبر</button></form>
+<div id="adminNews"></div>
+<hr><h3>تغییر رمز مدیریت</h3><input id="newpass" type="password" placeholder="رمز جدید"><button onclick="changePass()">ذخیره رمز</button>
+<p class="muted">برای افزودن عکس اسلایدر، بعد از انتشار سایت می‌توانید فایل‌های تصویر را جایگزین کنید. در نسخه بعدی می‌توان آپلود آنلاین تصویر را هم اضافه کرد.</p>
+</div></main><script src="app.js"></script></body></html>
